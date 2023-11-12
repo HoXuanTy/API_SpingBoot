@@ -21,12 +21,12 @@ public class FileUploadController {
     @PostMapping("")
     public ResponseEntity<ResposeObject> uploadFile(@RequestParam("file")MultipartFile file){
         try{
+            String customPath = "anhgai";
             //save file to folder -> user a service
-            String generatedFileName = storageService.storeFile(file);
+            String generatedFileName = storageService.storeFile(file, customPath);
             return  ResponseEntity.status(HttpStatus.OK).body(
                     new ResposeObject("ok","upload file successfully", generatedFileName)
             );
-
         }catch (Exception exception){
             return  ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
                     new ResposeObject("ok", exception.getMessage(), "")

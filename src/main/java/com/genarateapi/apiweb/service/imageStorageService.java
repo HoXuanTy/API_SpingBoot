@@ -3,6 +3,7 @@ package com.genarateapi.apiweb.service;
 import com.genarateapi.apiweb.models.Product;
 import com.genarateapi.apiweb.repositories.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Repository;
@@ -23,15 +24,17 @@ import org.apache.commons.io.FilenameUtils;
 
 @Service
 public class imageStorageService implements IStorageService{
-    @Autowired
+
     ProductRepository repository;
-    private  final Path storageFolder = Paths.get("upload");
+    private final Path storageFolder;
     //constructor
-    public imageStorageService(){
+    @Autowired
+    public imageStorageService(@Value("${image.storage.path:upload}") String storagePath){
+        this.storageFolder = Paths.get(storagePath).toAbsolutePath();
         try {
             Files.createDirectories(storageFolder);
-        }catch (IOException exception){
-                throw new RuntimeException("Cannot initialize storage", exception);
+        } catch (IOException exception) {
+            throw new RuntimeException("Cannot initialize storage", exception);
         }
     }
     public boolean isImageFile(MultipartFile file){
@@ -41,41 +44,46 @@ public class imageStorageService implements IStorageService{
                 .contains(fileExtension.trim().toLowerCase());
     }
     @Override
-    public String storeFile(MultipartFile file) {
+    public String storeFile(MultipartFile file, String customPath) {
         try {
-            System.out.println("haha");
-            if (file.isEmpty()){
-                throw new RuntimeException("Failes to store empty file");
+            if (file.isEmpty()) {
+                throw new RuntimeException("Failed to store empty file");
             }
-            //check file is image?
-            if(!isImageFile(file)){
-                throw new RuntimeException("You can only upload file.");
+
+            // Check file is an image
+            if (!isImageFile(file)) {
+                throw new RuntimeException("You can only upload image files.");
             }
-            //file must be < 5mb
-            float fileSizeInMegabytes = file.getSize()/ 1_000_000.0f;
-            if(fileSizeInMegabytes>5.0f){
+
+            // File must be < 5mb
+            float fileSizeInMegabytes = file.getSize() / 1_000_000.0f;
+            if (fileSizeInMegabytes > 5.0f) {
                 throw new RuntimeException("Files must be <= 5Mb");
             }
 
-            //file must be rename
-
+            // File must be renamed
             String fileExtension = FilenameUtils.getExtension(file.getOriginalFilename());
-            String generatedFileName = UUID.randomUUID().toString().replace("-", "");
-            generatedFileName = generatedFileName+"."+fileExtension;
-            Path destinationFilePath = this.storageFolder.resolve(Paths.get(generatedFileName)).normalize().toAbsolutePath();
-            if(!destinationFilePath.getParent().equals(this.storageFolder.toAbsolutePath())){
-                //this is a security check
-                throw new RuntimeException("Cannot store file outside current directory");
+            String generatedFileName = UUID.randomUUID().toString().replace("-", "") + "." + fileExtension;
+
+            Path destinationFilePath;
+            if (customPath != null && !customPath.isEmpty()) {
+                // Use custom path if provided
+                destinationFilePath = Paths.get(storageFolder.toString(), customPath, generatedFileName).normalize().toAbsolutePath();
+            } else {
+                // Use default storage folder
+                destinationFilePath = this.storageFolder.resolve(generatedFileName).normalize().toAbsolutePath();
             }
-            try(InputStream inputStream =file.getInputStream()){
+
+            try (InputStream inputStream = file.getInputStream()) {
                 Files.copy(inputStream, destinationFilePath, StandardCopyOption.REPLACE_EXISTING);
             }
-            return  generatedFileName;
-        }
-        catch (IOException exception){
-            throw new RuntimeException("Failes to store empty file", exception);
+
+            return destinationFilePath.toString();
+        } catch (IOException exception) {
+            throw new RuntimeException("Failed to store file", exception);
         }
     }
+
 
     @Override
     public Stream<Path> loadAll() {
