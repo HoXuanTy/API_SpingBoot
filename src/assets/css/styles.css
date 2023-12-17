@@ -3,6 +3,7 @@
     flex-wrap: wrap;
     gap: 20px;
     justify-content: center;
+    cursor: pointer;
   }
   
   .product-card {
@@ -54,11 +55,20 @@
   }
 
   /* Style for the table */
+
+.ctn_table{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 table {
-  width: 100%;
+  width: 80%;
   border-collapse: collapse;
   margin-top: 20px;
 }
+
+
 
 thead {
   background-color: #f2f2f2;
@@ -66,7 +76,7 @@ thead {
 
 th {
   padding: 12px;
-  text-align: left;
+  text-align: center;
 }
 
 tbody tr:nth-child(even) {

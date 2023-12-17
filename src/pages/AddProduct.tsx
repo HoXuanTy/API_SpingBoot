@@ -3,37 +3,52 @@ import productApi from '../api/productApi';
 import Product from '../models/productModel';
 
 function AddProduct() {
-  const [product, setProduct] = useState<Product>({ 
+  const [product, setProduct] = useState<Product>({
     id: 0,
-    productName: '', 
-    image: '', 
-    price: 0 });
-
+    productName: '',
+    image: '',
+    price: 0,
+  });
+  const [file, setFile] = useState<File | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setProduct({
-      ...product,
-      [name]: value,
-    });
+    const { name, value, type } = e.target;
+
+    if (type === 'file') {
+      const selectedFile = e.target.files && e.target.files[0];
+      setFile(selectedFile);
+    } else {
+      setProduct({
+        ...product,
+        [name]: value,
+      });
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!product.productName || !product.image || !product.price) {
-      alert('Vui lòng nhập đầy đủ thông tin sản phẩm.');
+
+    if (!product.productName || !product.price || !file) {
+      alert('Vui lòng nhập đầy đủ thông tin sản phẩm và chọn ảnh.');
       return;
     }
-  
-    productApi.insertProduct(product)
-      .then((data) => {
-        console.log('Sản phẩm đã được thêm thành công.', data);
+
+    productApi.uploadFile(file)
+      .then((imageUrl) => {
+        setProduct({
+          ...product,
+          image: imageUrl,
+        });
+
+        return productApi.insertProduct(product);
+      })
+      .then(() => {
+        console.log('Sản phẩm đã được thêm thành công.');
         alert('Thêm thành công');
       })
-      .catch(error => console.error('Có lỗi xảy ra khi thêm sản phẩm: ', error));
+      .catch((error) => console.error('Có lỗi xảy ra khi thêm sản phẩm: ', error));
   };
-  
+
 
 
   return (
@@ -50,11 +65,10 @@ function AddProduct() {
           />
         </div>
         <div>
-          <label>Đường dẫn hình ảnh:</label>
+          <label>Hình ảnh:</label>
           <input
-            type="text"
+            type="file"
             name="image"
-            value={product.image}
             onChange={handleChange}
           />
         </div>

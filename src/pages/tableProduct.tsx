@@ -20,7 +20,7 @@ function Products() {
   const handleEdit = (product: Product) => {
     setSelectedProduct(product);
   };
-
+  
   const handleEditSave = (editedProduct: Product) => {
     productApi.updateProduct(editedProduct)
       .then(() => {
@@ -42,29 +42,31 @@ function Products() {
   return (
     <div>
       <h1>Danh sách sản phẩm</h1>
-      <table>
-        <thead>
-          <tr>
-            <th>Hình ảnh</th>
-            <th>Tên sản phẩm</th>
-            <th>Giá</th>
-            <th>Thao tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((product) => (
-            <tr key={product.id}>
-              <td><img src={product.image} alt={product.productName}/></td>
-              <td>{product.productName}</td>
-              <td>{product.price}</td>
-              <td>
-                <button onClick={() => handleEdit(product)}>Sửa</button>
-                <button onClick={() => handleDelete(product.id)}>Xóa</button>
-              </td>
+      <div className='ctn_table'>
+        <table>
+          <thead>
+            <tr>
+              <th>Hình ảnh</th>
+              <th>Tên sản phẩm</th>
+              <th>Giá</th>
+              <th>Thao tác</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {products.map((product) => (
+              <tr key={product.id}>
+                <td><img src={product.image} alt={product.productName}/></td>
+                <td>{product.productName}</td>
+                <td>{product.price}</td>
+                <td>
+                  <button onClick={() => handleEdit(product)}>Sửa</button>
+                  <button onClick={() => handleDelete(product.id)}>Xóa</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {selectedProduct && (
         <EditProduct
           product={selectedProduct}
